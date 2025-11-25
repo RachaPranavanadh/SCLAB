@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    // these tool names MUST match the names configured in Jenkins > Global Tool Configuration
+    tools {
+        jdk 'JAVA_HOME'      // e.g. "JDK11" or whatever you named the JDK installation
+        maven 'MAVEN_HOME'   // e.g. "Maven 3.6.3"
+    }
+
+    stages {
+        stage('Prepare workspace & checkout') {
+            steps {
+                // remove the folder only if it exists (Windows cmd)
+                bat '''
+                    if exist Harshitha_Jenkins_Maven (
+                        rmdir /s /q Harshitha_Jenkins_Maven
+                    )
+                '''
+                // use the built-in git step (preferred over raw git clone)
+                git url: 'https://github.com/Harshitha-Macha/Harshitha_Jenkins_Maven.git', branch: 'main'
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                // run mvn clean from the project root (workspace now contains the repo)
+                bat 'mvn -f Harshitha_Jenkins_Maven/pom.xml clean'
+            }
+        }
+
+        stage('Install') {
+            steps {
+                bat 'mvn -f Harshitha_Jenkins_Maven/pom.xml install -DskipTests=false'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn -f Harshitha_Jenkins_Maven/pom.xml test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                bat 'mvn -f Harshitha_Jenkins_Maven/pom.xml package'
+            }
+        }
+    }
+
+    post {
+        always {
+            // archive build artifacts and test reports if present
+            archiveArtifacts artifacts: 'Harshitha_Jenkins_Maven/target/*.jar', allowEmptyArchive: true
+            junit testResults: 'Harshitha_Jenkins_Maven/target/surefire-reports/*.xml', allowEmptyResults: true
+        }
+    }
+}
