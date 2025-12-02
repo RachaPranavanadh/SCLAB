@@ -56,3 +56,4 @@ pipeline {
         }
     }
 }
+version:3.8\nweb:\nservices\nimage:nginx\nports:\n - "8082:80"\n db:\nimage:postgres:15\nenv:\n POSTGRES_USER:demo\n
